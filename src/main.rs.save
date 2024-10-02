@@ -1,0 +1,82 @@
+use reqwest::Error;
+use serde::Deserialize;
+use tokio_postgres::{NoTls, Error as PgError};
+use chrono::{DateTime, Utc};
+
+// Define the structure for deserializing the API response.
+#[derive(Deserialize, Debug)]
+struct ApiResponse {
+    height: u64,
+    hash: String,
+    time: DateTime<Utc>,
+    peer_count: u64,
+    unconfirmed_count: u64,
+    high_fee_per_kb: u64,
+    medium_fee_per_kb: u64,
+    low_fee_per_kb: u64,
+    last_fork_height: u64,
+    last_fork_hash: String,
+}
+
+// Function to fetch Bitcoin blockchain details from the API.
+async fn fetch_bitcoin_details() -> Result<ApiResponse, Error> {
+    let url = "https://api.blockcypher.com/v1/btc/main";
+    
+    // Send the GET request and deserialize the JSON response into the ApiResponse struct.
+    let response = reqwest::get(url).await?.json::<ApiResponse>().await?;
+    
+    Ok(response)
+}
+
+// Function to store Bitcoin blockchain details in PostgreSQL database.
+async fn store_bitcoin_details_in_db(details: ApiResponse) -> Result<(), PgError> {
+    // Connect to the PostgreSQL database.
+    let (client, connection) = tokio_postgres::connect("host=localhost user=postgres password=your_password dbname=bitcoin_db", NoTls).await?;
+
+    // Spawn the connection in the background to handle the database communication.
+    tokio::spawn(async move {
+        if let Err(e) = connection.await {
+            eprintln!("Database connection error: {}", e);
+        }
+    });
+
+    // Insert the blockchain details into the `bitcoin_details` table.
+    client.execute(
+        "INSERT INTO bitcoin_details (height, hash, time, peer_count, unconfirmed_count, high_fee_per_kb, medium_fee_per_kb, low_fee_per_kb, last_fork_height, last_fork_hash) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+        &[
+            &details.height,
+            &details.hash,
+            &details.time,
+            &details.peer_count,
+            &details.unconfirmed_count,
+            &details.high_fee_per_kb,
+            &details.medium_fee_per_kb,
+            &details.low_fee_per_kb,
+            &details.last_fork_height,
+            &details.last_fork_hash,
+        ],
+    ).await?;
+
+    println!("Inserted block details with height {} into the database", details.height);
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() {
+    // Fetch Bitcoin blockchain details from the API.
+    match fetch_bitcoin_details().await {
+        Ok(details) => {
+            println!("Fetched Bitcoin blockchain details: {:?}", details);
+
+            // Store the fetched details into the database.
+            if let Err(e) = store_bitcoin_details_in_db(details).await {
+                eprintln!("Failed to store details in database: {}", e);
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to fetch details: {}", e);
+        }
+    }
+}
+
