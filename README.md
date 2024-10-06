@@ -11,6 +11,8 @@ The project consists of three main components:
 - **Frontend**: A React.js application that provides a user-friendly interface to display Bitcoin block data.
 - **Backend**: A Node.js server using Express.js to handle API requests and interact with the database.
 - **Data Layer**: A Rust-based program for extracting Bitcoin data and storing it in a PostgreSQL database.
+  
+![image](https://github.com/user-attachments/assets/acb7f49e-ec12-4298-a529-8b6fd33ead19)
 
 ## Features
 
@@ -19,6 +21,9 @@ The project consists of three main components:
 - Efficient data storage and retrieval using PostgreSQL
 
 ## How to Run the Application
+
+### Directory
+<img width="260" alt="Screenshot 2024-10-06 at 2 18 18 PM" src="https://github.com/user-attachments/assets/63a1cb26-ce8b-43a7-b4fd-f275b8a394db">
 
 ### Prerequisites
 
