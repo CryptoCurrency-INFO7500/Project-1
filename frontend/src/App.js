@@ -175,7 +175,7 @@ function App() {
       <ContentWrapper>
         <Title>Project: Bitcoin Explorer</Title>
         <Subtitle>Part 1</Subtitle>
-        <Subtitle>Team: Aakshatha Patil, Sumanayana Konda, Ruthwik BG</Subtitle>
+        <Subtitle>Team: Akshatha Patil, Sumanayana Konda, Ruthwik BG</Subtitle>
         <Subtitle>Tools Used: React, NodeJs, PostgreSQL and Rust</Subtitle>
         
         <DropdownContainer>
