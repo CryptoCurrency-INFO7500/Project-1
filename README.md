@@ -69,7 +69,7 @@ The project consists of three main components:
 
 ## Contributors
 
-- Aakshatha Patil
+- Akshatha Patil
 - Sumanayana Konda
 - Ruthwik BG
 
