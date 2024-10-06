@@ -190,7 +190,7 @@ function App() {
               <Description>
                 Access the project's source code and contribute to its development.
               </Description>
-              <Link href="https://codelabs.developers.google.com/your-codelab-link" target="_blank" rel="noopener noreferrer">
+              <Link href="https://codelabs-preview.appspot.com/?file_id=1nGuJebyQEeMvaYzBLiP_bFUp9g18bfj34dL1UK5e1CY#0" target="_blank" rel="noopener noreferrer">
                 CodeLabs Tutorial
               </Link>
               <Description>
