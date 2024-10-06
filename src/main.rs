@@ -29,7 +29,7 @@ async fn insert_bitcoin_data(client: &Client, details: &ApiResponse) -> Result<(
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url = "https://api.blockcypher.com/v1/btc/main"; // API endpoint
-    let (client, connection) = tokio_postgres::connect("host=localhost port=5432 user=postgres password=1234 dbname=bitcoin_db", NoTls).await?;
+    let (client, connection) = tokio_postgres::connect("host=localhost port=5432 user=postgres password=postgres dbname=postgres", NoTls).await?;
 
     // Spawn the connection to run in the background
     tokio::spawn(async move {
