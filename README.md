@@ -4,6 +4,8 @@
 
 The Bitcoin Explorer Project is a web application designed to provide real-time information about Bitcoin blocks. It demonstrates an end-to-end flow from user interface to database, including data ingestion from the Bitcoin network.
 
+[Documentation CodeLabs](https://codelabs-preview.appspot.com/?file_id=1nGuJebyQEeMvaYzBLiP_bFUp9g18bfj34dL1UK5e1CY#0)
+
 ## Architecture
 
 The project consists of three main components:
