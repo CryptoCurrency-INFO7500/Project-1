@@ -1,73 +1,120 @@
-# Bitcoin Explorer Project
+# Bitcoin Explorer
+
+A real-time Bitcoin data visualization and analysis tool built with Rust, Node.js, and React.
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Technologies Used](#technologies-used)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Endpoints](#api-endpoints)
+- [Contributing](#contributing)
+- [Team](#team)
+- [License](#license)
 
 ## Introduction
 
-The Bitcoin Explorer Project is a web application designed to provide real-time information about Bitcoin blocks. It demonstrates an end-to-end flow from user interface to database, including data ingestion from the Bitcoin network.
-
+This Bitcoin Explorer provides real-time insights into both on-chain and off-chain Bitcoin metrics. It continuously ingests data from the Bitcoin network, stores it in a PostgreSQL database, and presents it through an interactive web interface.
 [Documentation CodeLabs](https://codelabs-preview.appspot.com/?file_id=1nGuJebyQEeMvaYzBLiP_bFUp9g18bfj34dL1UK5e1CY#0)
+## Features
+
+- Real-time data ingestion from Bitcoin APIs
+- Visualization of key Bitcoin metrics:
+  - Block height
+  - Price
+  - Transaction fees
+  - Peer count
+  - Unconfirmed transactions
+- Historical data view
+- Interactive charts and data tables
 
 ## Architecture
 
 The project consists of three main components:
 
-- **Frontend**: A React.js application that provides a user-friendly interface to display Bitcoin block data.
-- **Backend**: A Node.js server using Express.js to handle API requests and interact with the database.
-- **Data Layer**: A Rust-based program for extracting Bitcoin data and storing it in a PostgreSQL database.
-  
-![image](https://github.com/user-attachments/assets/acb7f49e-ec12-4298-a529-8b6fd33ead19)
+1. **Data Ingestion (Rust)**: Continuously fetches Bitcoin data and stores it in PostgreSQL.
+2. **Backend (Node.js)**: Serves data from PostgreSQL to the frontend via a RESTful API.
+3. **Frontend (React)**: Presents data in an interactive, user-friendly interface.
 
-## Features
+   ![image](https://github.com/user-attachments/assets/acb7f49e-ec12-4298-a529-8b6fd33ead19)
 
-- Real-time Bitcoin block data retrieval
-- Interactive user interface with animated elements
-- Efficient data storage and retrieval using PostgreSQL
+## Technologies Used
 
-## How to Run the Application
+- **Rust**: For efficient and safe data ingestion
+- **Node.js & Express**: For the backend API
+- **React**: For the frontend user interface
+- **PostgreSQL**: For data storage
+- **Chart.js**: For data visualization
+- **Styled-components**: For component-based styling
 
 ### Directory
 <img width="260" alt="Screenshot 2024-10-06 at 2 18 18 PM" src="https://github.com/user-attachments/assets/63a1cb26-ce8b-43a7-b4fd-f275b8a394db">
 
+## Installation
+
 ### Prerequisites
 
-- Node.js
-- Rust
-- PostgreSQL
+- Rust (latest stable version)
+- Node.js (v14 or later)
+- PostgreSQL (v12 or later)
+- npm or yarn
 
-### Setup Instructions
+### Setup
 
-1. **Database Setup**:
-   - Install PostgreSQL.
-   - Create a database named `postgres`.
-   - Create a table named `bitcoin_details` with columns `height` (integer) and `hash` (text).
+1. Clone the repository:
+git clone https://github.com/your-repo/bitcoin-explorer.git
+cd bitcoin-explorer
 
-2. **Run the Rust Extractor**:
-   - Navigate to the Rust project directory.
-   - Run `cargo run` to start the data extraction process.
+2. Set up the database:
+psql -c "CREATE DATABASE bitcoin_explorer"
 
-3. **Start the Backend**:
-   - Navigate to the backend directory.
-   - Run `npm install` to install dependencies.
-   - Start the server with `node server.js`.
+3. Set up environment variables:
+Create a `.env` file in the root directory with the following content:
+DATABASE_URL=postgres://username:password@localhost/bitcoin_explorer
 
-4. **Launch the Frontend**:
-   - Navigate to the frontend directory.
-   - Run `npm install` to install dependencies.
-   - Start the React app with `npm start`.
+4. Install dependencies:
+For Rust ingestion
+cd ingestion
+cargo build
+For Node.js backend
+cd ../backend
+npm install
+For React frontend
+cd ../frontend
+npm install
 
-## Technologies Used
+## Usage
 
-- **React.js**: For building the user interface.
-- **Node.js**: For handling backend logic and API requests.
-- **Rust**: For efficient data extraction from the Bitcoin network.
-- **PostgreSQL**: For storing and retrieving block data.
+1. Start the Rust ingestion service:
+cd ingestion
+cargo run
 
-## Project Flow
+2. Start the Node.js backend:
+cd backend
+npm start
 
-1. The Rust program extracts Bitcoin data from an API and stores it in PostgreSQL.
-2. The Node.js backend serves this data through an API endpoint.
-3. The React frontend fetches and displays the data in an interactive format.
+3. Start the React frontend:
+cd frontend
+npm start
 
-## Contributors
+4. Open your browser and navigate to `http://localhost:3000` to view the application.
+
+## API Endpoints
+
+- `GET /api/historical`: Fetches historical Bitcoin data
+- `GET /api/latest`: Fetches the latest Bitcoin metrics
+- `GET /api/block/:height`: Fetches data for a specific block height
+
+For full API documentation, refer to the [API Documentation](./API_DOCS.md) file.
+
+## Contributing
+
+We welcome contributions to the Bitcoin Explorer project! Please read our [Contributing Guidelines](./CONTRIBUTING.md) for details on how to submit pull requests, report issues, and suggest improvements.
+
+## Team
 
 - Akshatha Patil
 - Sumanayana Konda
