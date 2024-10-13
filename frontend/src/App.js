@@ -82,6 +82,7 @@
 
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
+
 import BitcoinCharts from './components/BitcoinCharts';
 import './App.css'; // Assuming you have some basic styles
 

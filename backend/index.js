@@ -37,3 +37,5 @@ app.get('/api/bitcoin-details', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+
