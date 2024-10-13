@@ -7,6 +7,19 @@ struct ApiResponse {
     name: String,
     height: u64,
     hash: String,
+    time: String,
+    latest_url: String,
+    previous_hash: String,
+    previous_url: String,
+    peer_count: i64,
+    unconfirmed_count: i64,
+    high_fee_per_kb: i64,
+    medium_fee_per_kb: i64,
+    low_fee_per_kb: i64,
+    last_fork_height: i64,
+    last_fork_hash: String,
+
+
     // Add any other fields you might want to store
 }
 
@@ -19,8 +32,15 @@ async fn insert_bitcoin_data(client: &Client, details: &ApiResponse) -> Result<(
     let height = details.height as i64; // Convert u64 to i64
 
     client.execute(
-        "INSERT INTO bitcoin_details (height, hash) VALUES ($1, $2)",
-        &[&height, &details.hash],
+        "INSERT INTO bitcoin_details (height, hash,time,latest_url,previous_hash,previous_url,peer_count,
+            unconfirmed_count,
+            high_fee_per_kb,
+            medium_fee_per_kb,
+            low_fee_per_kb,
+            last_fork_height,
+            last_fork_hash) VALUES ($1, $2, $3 ,$4 ,$5 ,$6, $7, $8 ,$9 ,$10 ,$11 ,$12 ,$13)",
+        &[&height, &details.hash, &details.time, &details.latest_url, &details.previous_hash, &details.previous_url ,&details.peer_count ,&details.unconfirmed_count,
+        &details.high_fee_per_kb, &details.medium_fee_per_kb, &details.low_fee_per_kb, &details.last_fork_height, &details.last_fork_hash],
     ).await?;
 
     Ok(())
