@@ -1,5 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { Line, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title as ChartTitle, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ChartTitle, Tooltip, Legend);
 
 const gradientAnimation = keyframes`
   0% { background-position: 0% 50%; }
@@ -26,7 +30,7 @@ const ContentWrapper = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 30px;
   width: 90%;
-  max-width: 800px;
+  max-width: 1200px;
   transition: all 0.3s ease;
 
   &:hover {
@@ -35,7 +39,7 @@ const ContentWrapper = styled.div`
   }
 `;
 
-const Title = styled.h1`
+const StyledTitle = styled.h1`
   color: #333;
   text-align: center;
   margin-bottom: 5px;
@@ -90,50 +94,8 @@ const TableRow = styled.tr`
   }
 `;
 
-const NoDataMessage = styled.td`
-  text-align: center;
-  padding: 30px;
-  color: #666;
-  font-style: italic;
-`;
-
-const DropdownContainer = styled.div`
-  margin-bottom: 20px;
-`;
-
-const DropdownButton = styled.button`
-  background-color: #3498db;
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: #2980b9;
-  }
-`;
-
-const DropdownContent = styled.div`
-  background-color: #f9f9f9;
-  border-radius: 5px;
-  padding: 15px;
-  margin-top: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-`;
-
-const Link = styled.a`
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 10px;
-
-  &:hover {
-    text-decoration: underline;
-  }
+const ChartContainer = styled.div`
+  margin-top: 20px;
 `;
 
 const Description = styled.p`
@@ -141,14 +103,67 @@ const Description = styled.p`
   margin-bottom: 15px;
 `;
 
+const CardContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 20px;
+`;
+
+const Card = styled.div`
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 15px;
+  margin-bottom: 15px;
+  width: calc(33% - 10px);
+`;
+
+const CardTitle = styled.h3`
+  color: #333;
+  margin-bottom: 10px;
+`;
+
+const CardValue = styled.p`
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #3498db;
+`;
+
+const Button = styled.button`
+  background-color: #3498db;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 10px;
+
+  &:hover {
+    background-color: #2980b9;
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+`;
+
+const Section = styled.section`
+  margin-bottom: 30px;
+`;
+
 function App() {
   const [bitcoinDetails, setBitcoinDetails] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [activeView, setActiveView] = useState('home');
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/bitcoin-details')
+    fetch('http://localhost:3000/api/historical')
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -157,7 +172,7 @@ function App() {
       })
       .then(data => {
         console.log("Fetched Bitcoin Data:", data);
-        setBitcoinDetails(data);
+        setBitcoinDetails(data.reverse());
         setIsLoading(false);
       })
       .catch(error => {
@@ -167,61 +182,184 @@ function App() {
       });
   }, []);
 
-  if (isLoading) return <AppContainer><ContentWrapper><Title>Loading...</Title></ContentWrapper></AppContainer>;
-  if (error) return <AppContainer><ContentWrapper><Title>Error: {error}</Title></ContentWrapper></AppContainer>;
+  const priceData = {
+    labels: bitcoinDetails.map(detail => new Date(detail.time).toLocaleDateString()),
+    datasets: [{
+      label: 'Bitcoin Price (USD)',
+      data: bitcoinDetails.map(detail => detail.price),
+      borderColor: 'rgb(75, 192, 192)',
+      tension: 0.1
+    }]
+  };
+
+  const blockHeightData = {
+    labels: bitcoinDetails.map(detail => new Date(detail.time).toLocaleDateString()),
+    datasets: [{
+      label: 'Block Height',
+      data: bitcoinDetails.map(detail => detail.height),
+      backgroundColor: 'rgb(255, 99, 132)',
+    }]
+  };
+
+  const feeData = {
+    labels: bitcoinDetails.map(detail => new Date(detail.time).toLocaleDateString()),
+    datasets: [
+      {
+        label: 'High Fee per KB',
+        data: bitcoinDetails.map(detail => detail.high_fee_per_kb),
+        borderColor: 'rgb(255, 99, 132)',
+      },
+      {
+        label: 'Medium Fee per KB',
+        data: bitcoinDetails.map(detail => detail.medium_fee_per_kb),
+        borderColor: 'rgb(75, 192, 192)',
+      },
+      {
+        label: 'Low Fee per KB',
+        data: bitcoinDetails.map(detail => detail.low_fee_per_kb),
+        borderColor: 'rgb(255, 205, 86)',
+      }
+    ]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: true, text: 'Bitcoin Metrics' },
+    },
+  };
+
+  if (isLoading) return <AppContainer><ContentWrapper><StyledTitle>Loading...</StyledTitle></ContentWrapper></AppContainer>;
+  if (error) return <AppContainer><ContentWrapper><StyledTitle>Error: {error}</StyledTitle></ContentWrapper></AppContainer>;
+
+  const latestData = bitcoinDetails[bitcoinDetails.length - 1];
+
+  const renderHome = () => (
+    <>
+      <StyledTitle>Project: Bitcoin Explorer</StyledTitle>
+      <Subtitle>Team: Akshatha Patil, Sumanayana Konda, Ruthwik BG</Subtitle>
+      <Subtitle>Tools Used: React, NodeJs, PostgreSQL and Rust</Subtitle>
+      
+      <Section>
+        <h2>Project Details</h2>
+        <p>This Bitcoin Explorer provides real-time data visualization and analysis of both on-chain and off-chain metrics. It continuously ingests data from the Bitcoin network and presents it through an interactive user interface.</p>
+      </Section>
+
+      <Section>
+        <h2>On-Chain Metrics</h2>
+        <p>On-chain metrics are data points derived directly from the Bitcoin blockchain. In this project, we track:</p>
+        <ul>
+          <li><strong>Block Height:</strong> The number of blocks in the blockchain, indicating the chain's current length.</li>
+          <li><strong>Block Hash:</strong> A unique identifier for each block in the chain.</li>
+          <li><strong>Transaction Fees:</strong> The cost of including transactions in blocks, categorized as high, medium, and low.</li>
+        </ul>
+      </Section>
+
+      <Section>
+        <h2>Off-Chain Metrics</h2>
+        <p>Off-chain metrics are data points not directly stored on the blockchain but related to the Bitcoin network. We monitor:</p>
+        <ul>
+          <li><strong>Price:</strong> The current market value of Bitcoin in USD.</li>
+          <li><strong>Peer Count:</strong> The number of connected nodes in the Bitcoin network.</li>
+          <li><strong>Unconfirmed Transactions:</strong> The number of transactions waiting to be included in a block.</li>
+        </ul>
+      </Section>
+
+      <ButtonContainer>
+        <Button onClick={() => setActiveView('database')}>View Database</Button>
+        <Button onClick={() => setActiveView('visualizations')}>View Visualizations</Button>
+      </ButtonContainer>
+    </>
+  );
 
   return (
     <AppContainer>
       <ContentWrapper>
-        <Title>Project: Bitcoin Explorer</Title>
-        <Subtitle>Part 1</Subtitle>
-        <Subtitle>Team: Akshatha Patil, Sumanayana Konda, Ruthwik BG</Subtitle>
-        <Subtitle>Tools Used: React, NodeJs, PostgreSQL and Rust</Subtitle>
-        
-        <DropdownContainer>
-          <DropdownButton onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            {isDropdownOpen ? 'Hide Project Links' : 'Show Project Links'}
-          </DropdownButton>
-          {isDropdownOpen && (
-            <DropdownContent>
-              <Link href="https://github.com/CryptoCurrency-INFO7500/Project-1" target="_blank" rel="noopener noreferrer">
-                GitHub Repository
-              </Link>
-              <Description>
-                Access the project's source code and contribute to its development.
-              </Description>
-              <Link href="https://codelabs-preview.appspot.com/?file_id=1nGuJebyQEeMvaYzBLiP_bFUp9g18bfj34dL1UK5e1CY#0" target="_blank" rel="noopener noreferrer">
-                CodeLabs Tutorial
-              </Link>
-              <Description>
-                Follow our step-by-step tutorial to understand and recreate this project.
-              </Description>
-            </DropdownContent>
-          )}
-        </DropdownContainer>
+        {activeView === 'home' && renderHome()}
 
-        <Table>
-          <thead>
-            <TableRow>
-              <TableHeader>Height</TableHeader>
-              <TableHeader>Hash</TableHeader>
-            </TableRow>
-          </thead>
-          <tbody>
-            {bitcoinDetails.length > 0 ? (
-              bitcoinDetails.map((detail, index) => (
-                <TableRow key={index}>
-                  <TableCell>{detail.height}</TableCell>
-                  <TableCell>{detail.hash}</TableCell>
+        {activeView === 'database' && (
+          <>
+            <StyledTitle>Bitcoin Database</StyledTitle>
+            <Table>
+              <thead>
+                <TableRow>
+                  <TableHeader>Height</TableHeader>
+                  <TableHeader>Hash</TableHeader>
+                  <TableHeader>Time</TableHeader>
+                  <TableHeader>Price (USD)</TableHeader>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <NoDataMessage colSpan="2">No Bitcoin details available</NoDataMessage>
-              </TableRow>
-            )}
-          </tbody>
-        </Table>
+              </thead>
+              <tbody>
+                {bitcoinDetails.map((detail, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{detail.height}</TableCell>
+                    <TableCell>{detail.hash}</TableCell>
+                    <TableCell>{new Date(detail.time).toLocaleString()}</TableCell>
+                    <TableCell>${detail.price.toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </tbody>
+            </Table>
+            <Button onClick={() => setActiveView('home')}>Back to Home</Button>
+          </>
+        )}
+
+        {activeView === 'visualizations' && (
+          <>
+            <StyledTitle>Bitcoin Insights</StyledTitle>
+            
+            <CardContainer>
+              <Card>
+                <CardTitle>Latest Block Height</CardTitle>
+                <CardValue>{latestData.height}</CardValue>
+              </Card>
+              <Card>
+                <CardTitle>Latest Price</CardTitle>
+                <CardValue>${latestData.price.toFixed(2)}</CardValue>
+              </Card>
+              <Card>
+                <CardTitle>Peer Count</CardTitle>
+                <CardValue>{latestData.peer_count}</CardValue>
+              </Card>
+              <Card>
+                <CardTitle>Unconfirmed Transactions</CardTitle>
+                <CardValue>{latestData.unconfirmed_count}</CardValue>
+              </Card>
+              <Card>
+                <CardTitle>Last Fork Height</CardTitle>
+                <CardValue>{latestData.last_fork_height}</CardValue>
+              </Card>
+              <Card>
+                <CardTitle>High Fee per KB</CardTitle>
+                <CardValue>{latestData.high_fee_per_kb}</CardValue>
+              </Card>
+            </CardContainer>
+
+            <ChartContainer>
+              <Line data={priceData} options={{...chartOptions, plugins: {...chartOptions.plugins, title: {display: true, text: 'Bitcoin Price History'}}}} />
+            </ChartContainer>
+            <Description>
+              Price chart shows Bitcoin's market value over time, reflecting market dynamics and investor sentiment.
+            </Description>
+
+            <ChartContainer>
+              <Bar data={blockHeightData} options={{...chartOptions, plugins: {...chartOptions.plugins, title: {display: true, text: 'Block Height Progression'}}}} />
+            </ChartContainer>
+            <Description>
+              Block height represents the blockchain's length, indicating network growth and security.
+            </Description>
+
+            <ChartContainer>
+              <Line data={feeData} options={{...chartOptions, plugins: {...chartOptions.plugins, title: {display: true, text: 'Transaction Fees'}}}} />
+            </ChartContainer>
+            <Description>
+              Fee trends reflect network congestion and transaction prioritization.
+            </Description>
+
+            <Button onClick={() => setActiveView('home')}>Back to Home</Button>
+          </>
+        )}
       </ContentWrapper>
     </AppContainer>
   );
