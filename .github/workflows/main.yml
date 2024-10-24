@@ -1,0 +1,43 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+    
+    - name: Install dependencies and build frontend
+      working-directory: ./frontend
+      run: |
+        npm install
+        npm run build
+    
+    - name: Build Docker image for frontend
+      working-directory: ./frontend
+      run: docker build -t react-frontend .
+    
+    - name: Install dependencies and build backend
+      working-directory: ./backend
+      run: |
+        npm install
+    
+    - name: Build Docker image for backend
+      working-directory: ./backend
+      run: docker build -t ts-backend .
+    
+    - name: Build Docker image for Rust extractor
+      working-directory: ./rust_extractor
+      run: docker build -t rust_extractor .
+    
+    # Add deployment steps here if deploying to a cloud service like AWS, Azure, or GCP.
