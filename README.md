@@ -1,35 +1,22 @@
 # Bitcoin Explorer
 
-A real-time Bitcoin data visualization and analysis tool built with Rust, Node.js, and React.
+Bitcoin Explorer is a full-stack application that provides historical Bitcoin price data and analysis. It consists of a React frontend, a TypeScript backend, a Rust data extractor, and a PostgreSQL database.
 
-## Table of Contents
+## Project Structure
 
-- [Introduction](#introduction)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Technologies Used](#technologies-used)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Endpoints](#api-endpoints)
-- [Contributing](#contributing)
-- [Team](#team)
-- [License](#license)
+The project is composed of four main components:
 
-## Introduction
+1. Frontend (React)
+2. Backend (TypeScript)
+3. Data Extractor (Rust)
+4. Database (PostgreSQL)
 
-This Bitcoin Explorer provides real-time insights into both on-chain and off-chain Bitcoin metrics. It continuously ingests data from the Bitcoin network, stores it in a PostgreSQL database, and presents it through an interactive web interface.
-[Documentation CodeLabs](https://codelabs-preview.appspot.com/?file_id=1nGuJebyQEeMvaYzBLiP_bFUp9g18bfj34dL1UK5e1CY#0)
-## Features
+## Prerequisites
 
-- Real-time data ingestion from Bitcoin APIs
-- Visualization of key Bitcoin metrics:
-  - Block height
-  - Price
-  - Transaction fees
-  - Peer count
-  - Unconfirmed transactions
-- Historical data view
-- Interactive charts and data tables
+- Docker
+- Docker Compose
+- Node.js (for local development)
+- Rust (for local development of the extractor)
 
 ## Architecture
 
@@ -41,93 +28,107 @@ The project consists of three main components:
 
    ![image](https://github.com/user-attachments/assets/acb7f49e-ec12-4298-a529-8b6fd33ead19)
 
-## Technologies Used
+## Getting Started
 
-- **Rust**: For efficient and safe data ingestion
-- **Typescript & Express**: For the backend API
-- **React**: For the frontend user interface
-- **PostgreSQL**: For data storage
-- **Chart.js**: For data visualization
-- **Styled-components**: For component-based styling
-
-### Directory
-<img width="260" alt="Screenshot 2024-10-06 at 2 18 18 PM" src="https://github.com/user-attachments/assets/63a1cb26-ce8b-43a7-b4fd-f275b8a394db">
-
-## Installation
-
-### Prerequisites
-
-- Rust (latest stable version)
-- Typescript
-- PostgreSQL (v12 or later)
-- npm or yarn
-
-### Setup
+To run the entire application stack:
 
 1. Clone the repository:
-git clone https://github.com/your-repo/bitcoin-explorer.git
+```
+git clone https://github.com/yourusername/bitcoin-explorer.git
 cd bitcoin-explorer
+```
 
-2. Set up the database:
-psql -c "CREATE DATABASE bitcoin_explorer"
+2. Start the services using Docker Compose:
+```
+docker-compose up --build
+```
 
-3. Set up environment variables:
-Create a `.env` file in the root directory with the following content:
-DATABASE_URL=postgres://username:password@localhost/bitcoin_explorer
+3. Access the application at `http://localhost:3000`
 
-4. Install dependencies:
-For Rust ingestion
-cd ingestion
-cargo build
-For Typescript backend
-cd ../backend
-npm install
-For React frontend
-cd ../frontend
-npm install
+## Component Details
 
-## Usage
+### Frontend
 
-1. Start the Rust ingestion service:
-cd ingestion
-cargo run
+- Built with React
+- Located in the `./frontend` directory
+- Provides a user interface for viewing Bitcoin price data and analysis
 
-2. Start the Typescript backend:
-cd backend
-npm start
+#### Development
 
-3. Start the React frontend:
+To run the frontend locally:
+```
 cd frontend
+npm install
 npm start
+```
 
-4. Open your browser and navigate to `http://localhost:3000` to view the application.
+### Backend
+
+- Built with TypeScript
+- Located in the `./backend` directory
+- Provides API endpoints for the frontend to fetch data
+
+#### Development
+
+To run the backend locally:
+```
+cd backend
+npm install
+npm run dev
+```
+
+### Data Extractor
+
+- Built with Rust
+- Located in the `./rust_extractor` directory
+- Extracts Bitcoin price data and stores it in the database
+
+#### Development
+
+To run the extractor locally:
+```
+cd rust_extractor
+cargo run
+```
+
+### Database
+
+- PostgreSQL database
+- Stores historical Bitcoin price data
 
 ## API Endpoints
 
-- `GET /api/historical`: Fetches historical Bitcoin data
-- `GET /api/latest`: Fetches the latest Bitcoin metrics
-- `GET /api/block/:height`: Fetches data for a specific block height
+- `GET /api/historical`: Fetches historical Bitcoin price data
+- [Add other endpoints as necessary]
 
-For full API documentation, refer to the [API Documentation](./API_DOCS.md) file.
+## Docker Compose Configuration
+
+The `docker-compose.yml` file defines the following services:
+
+- `frontend`: React frontend application
+- `backend`: TypeScript backend API
+- `extractor`: Rust data extractor
+- `db`: PostgreSQL database
+
+## Environment Variables
+
+- `DATABASE_URL`: PostgreSQL connection string (used by backend and extractor)
+- `PORT`: Port for the backend service (default: 3002)
+
+## Troubleshooting
+
+If you encounter issues with service connectivity:
+
+1. Ensure all services are running: `docker-compose ps`
+2. Check service logs: `docker-compose logs [service_name]`
+3. Verify network connectivity between services
+4. Ensure the backend API is correctly configured to handle CORS
 
 ## Contributing
 
-We welcome contributions to the Bitcoin Explorer project! Please read our [Contributing Guidelines](./CONTRIBUTING.md) for details on how to submit pull requests, report issues, and suggest improvements.
-
-## Team
-
-- Akshatha Patil
 - Sumanayana Konda
-- Ruthwik BG
+- Akshatha Patil
+- Ruthwik Bommenahalli Gowda
 
-## References
 
-- [React Documentation](https://reactjs.org/docs/getting-started.html)
-- [Typescript Documentation](https://nodejs.org/en/docs/)
-- [Rust Documentation](https://doc.rust-lang.org/book/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [BlockCypher API Documentation](https://www.blockcypher.com/dev/bitcoin/)
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
