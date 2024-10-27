@@ -36,7 +36,7 @@ This Bitcoin Explorer provides real-time insights into both on-chain and off-cha
 The project consists of three main components:
 
 1. **Data Ingestion (Rust)**: Continuously fetches Bitcoin data and stores it in PostgreSQL.
-2. **Backend (Node.js)**: Serves data from PostgreSQL to the frontend via a RESTful API.
+2. **Backend (Typescript)**: Serves data from PostgreSQL to the frontend via a RESTful API.
 3. **Frontend (React)**: Presents data in an interactive, user-friendly interface.
 
    ![image](https://github.com/user-attachments/assets/acb7f49e-ec12-4298-a529-8b6fd33ead19)
@@ -44,7 +44,7 @@ The project consists of three main components:
 ## Technologies Used
 
 - **Rust**: For efficient and safe data ingestion
-- **Node.js & Express**: For the backend API
+- **Typescript & Express**: For the backend API
 - **React**: For the frontend user interface
 - **PostgreSQL**: For data storage
 - **Chart.js**: For data visualization
@@ -58,7 +58,7 @@ The project consists of three main components:
 ### Prerequisites
 
 - Rust (latest stable version)
-- Node.js (v14 or later)
+- Typescript
 - PostgreSQL (v12 or later)
 - npm or yarn
 
@@ -79,7 +79,7 @@ DATABASE_URL=postgres://username:password@localhost/bitcoin_explorer
 For Rust ingestion
 cd ingestion
 cargo build
-For Node.js backend
+For Typescript backend
 cd ../backend
 npm install
 For React frontend
@@ -92,7 +92,7 @@ npm install
 cd ingestion
 cargo run
 
-2. Start the Node.js backend:
+2. Start the Typescript backend:
 cd backend
 npm start
 
@@ -123,7 +123,7 @@ We welcome contributions to the Bitcoin Explorer project! Please read our [Contr
 ## References
 
 - [React Documentation](https://reactjs.org/docs/getting-started.html)
-- [Node.js Documentation](https://nodejs.org/en/docs/)
+- [Typescript Documentation](https://nodejs.org/en/docs/)
 - [Rust Documentation](https://doc.rust-lang.org/book/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [BlockCypher API Documentation](https://www.blockcypher.com/dev/bitcoin/)

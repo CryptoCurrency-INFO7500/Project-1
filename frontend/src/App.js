@@ -163,7 +163,7 @@ function App() {
   const [activeView, setActiveView] = useState('home');
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/historical')
+    fetch('http://0.0.0.0:3002/api/historical')
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

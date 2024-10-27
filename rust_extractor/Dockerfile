@@ -18,9 +18,9 @@ COPY . .
 
 RUN cargo build --release
 
-FROM debian:bullseye-slim
+FROM ubuntu:22.04
 
-RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libssl3 ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/src/myapp/target/release/rust_extractor /usr/local/bin/rust_extractor
 
