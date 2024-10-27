@@ -1,24 +1,27 @@
-# Use the official Rust image as a build environment
-FROM rust:latest AS builder
+# FROM rust:latest as builder
+# WORKDIR /usr/src/app
+# COPY . .
+# RUN cargo build --release
 
-WORKDIR /usr/src/app
+# FROM debian:bullseye-slim
+# RUN apt-get update && \
+#     apt-get update && apt-get install -y libssl3 \
+#     apt-get install -y ca-certificates && \
+#     rm -rf /var/lib/apt/lists/*
+# COPY --from=builder /usr/src/app/target/release/rust_extractor /usr/local/bin/
+# CMD ["rust_extractor"]
 
-# Copy the entire project into the container
+FROM rust:latest as builder
+
+WORKDIR /usr/src/myapp
 COPY . .
 
-# Build for release
 RUN cargo build --release
 
-# Use a smaller base image for running the application
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
-WORKDIR /app
+RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Copy the compiled binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/bitcoin_explorer .
+COPY --from=builder /usr/src/myapp/target/release/rust_extractor /usr/local/bin/rust_extractor
 
-# Make sure the binary is executable
-RUN chmod +x /app/bitcoin_explorer
-
-# Set the startup command to run your binary
-CMD ["./bitcoin_explorer"]
+CMD ["rust_extractor"]

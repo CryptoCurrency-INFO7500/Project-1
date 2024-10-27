@@ -34,17 +34,22 @@ struct PriceData {
 }
 
 async fn fetch_bitcoin_data(url: &str) -> Result<BlockchainApiResponse, ReqwestError> {
+    println!("Fetching Bitcoin data from {}", url);
     let response = reqwest::get(url).await?.json::<BlockchainApiResponse>().await?;
+    println!("Bitcoin data fetched successfully");
     Ok(response)
 }
 
 async fn fetch_bitcoin_price() -> Result<PriceData, ReqwestError> {
     let url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_vol=true";
+    println!("Fetching Bitcoin price from {}", url);
     let response = reqwest::get(url).await?.json::<PriceApiResponse>().await?;
+    println!("Bitcoin price fetched successfully");
     Ok(response.bitcoin)
 }
 
 async fn create_table_if_not_exists(client: &Client) -> Result<(), PgError> {
+    println!("Creating table if not exists");
     client.execute(
         "CREATE TABLE IF NOT EXISTS bitcoin_details (
             id SERIAL PRIMARY KEY,
@@ -67,11 +72,12 @@ async fn create_table_if_not_exists(client: &Client) -> Result<(), PgError> {
         )",
         &[],
     ).await?;
-
+    println!("Table created or already exists");
     Ok(())
 }
 
 async fn insert_bitcoin_data(client: &Client, block: &BlockchainApiResponse, price: &PriceData) -> Result<(), PgError> {
+    println!("Inserting Bitcoin data into database");
     client.execute(
         "INSERT INTO bitcoin_details (
             height, hash, time, latest_url, previous_hash, previous_url, 
@@ -86,15 +92,15 @@ async fn insert_bitcoin_data(client: &Client, block: &BlockchainApiResponse, pri
             &price.usd, &price.usd_24h_vol
         ],
     ).await?;
-
+    println!("Data inserted successfully");
     Ok(())
 }
 
 async fn add_missing_columns(client: &Client) -> Result<(), PgError> {
+    println!("Checking for missing columns");
     let columns_to_check = [
         ("latest_url", "TEXT"),
         ("previous_url", "TEXT"),
-        // Add any other columns that might be missing
     ];
 
     for (column_name, column_type) in columns_to_check.iter() {
@@ -103,6 +109,7 @@ async fn add_missing_columns(client: &Client) -> Result<(), PgError> {
             column_name, column_type
         );
         client.execute(&query, &[]).await?;
+        println!("Added column {} if it didn't exist", column_name);
     }
 
     Ok(())
@@ -110,8 +117,12 @@ async fn add_missing_columns(client: &Client) -> Result<(), PgError> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Starting Bitcoin data extractor");
     let blockchain_url = "https://api.blockcypher.com/v1/btc/main";
-    let (client, connection) = tokio_postgres::connect("host=localhost port=5432 user=postgres password=postgres dbname=postgres", NoTls).await?;
+    let db_url = "host=db port=5432 user=postgres password=postgres dbname=postgres";
+    
+    println!("Connecting to database: {}", db_url);
+    let (client, connection) = tokio_postgres::connect(db_url, NoTls).await?;
 
     tokio::spawn(async move {
         if let Err(e) = connection.await {
@@ -119,7 +130,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    // Create table if it doesn't exist
+    println!("Connected to database successfully");
+
     if let Err(e) = create_table_if_not_exists(&client).await {
         eprintln!("Error creating table: {:?}", e);
         return Err(e.into());
@@ -130,12 +142,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err(e.into());
     }
 
+    println!("Starting main loop");
     loop {
         match fetch_bitcoin_data(blockchain_url).await {
             Ok(block_details) => {
                 match fetch_bitcoin_price().await {
                     Ok(price_data) => {
-                        println!("Bitcoin data fetched: {:?}, Price: ${}, 24h Volume: ${}", block_details, price_data.usd, price_data.usd_24h_vol);
+                        println!("Bitcoin data fetched: Height: {}, Price: ${}", block_details.height, price_data.usd);
                         if let Err(e) = insert_bitcoin_data(&client, &block_details, &price_data).await {
                             eprintln!("Error inserting data: {:?}", e);
                         } else {
@@ -148,7 +161,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Err(e) => eprintln!("Error fetching blockchain data: {:?}", e),
         }
 
-        // Wait for 1 minute before the next update
+        println!("Waiting for 60 seconds before next update");
         tokio::time::sleep(Duration::from_secs(60)).await;
     }
 }
