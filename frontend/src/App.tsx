@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Line, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title as ChartTitle, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title as ChartTitle, Tooltip, Legend, ChartOptions } from 'chart.js';
+
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ChartTitle, Tooltip, Legend);
 
+// Styled components and animations
 const gradientAnimation = keyframes`
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -156,26 +158,39 @@ const Section = styled.section`
   margin-bottom: 30px;
 `;
 
-function App() {
-  const [bitcoinDetails, setBitcoinDetails] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeView, setActiveView] = useState('home');
+interface BitcoinDetail {
+  height: number;
+  hash: string;
+  time: string;
+  price: number;
+  peer_count: number;
+  unconfirmed_count: number;
+  high_fee_per_kb: number;
+  medium_fee_per_kb: number;
+  low_fee_per_kb: number;
+  last_fork_height: number;
+}
+
+function App(): JSX.Element {
+  const [bitcoinDetails, setBitcoinDetails] = useState<BitcoinDetail[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'home' | 'database' | 'visualizations'>('home');
 
   useEffect(() => {
-    fetch('http://0.0.0.0:3002/api/historical')
+    fetch(`http://34.55.192.137:3002/api/historical`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         return response.json();
       })
-      .then(data => {
+      .then((data: BitcoinDetail[]) => {
         console.log("Fetched Bitcoin Data:", data);
         setBitcoinDetails(data.reverse());
         setIsLoading(false);
       })
-      .catch(error => {
+      .catch((error: Error) => {
         console.error('Error fetching data:', error);
         setError(error.message);
         setIsLoading(false);
@@ -222,10 +237,10 @@ function App() {
     ]
   };
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'line' | 'bar'> = {
     responsive: true,
     plugins: {
-      legend: { position: 'top' },
+      legend: { position: 'top' as const },
       title: { display: true, text: 'Bitcoin Metrics' },
     },
   };
@@ -235,11 +250,11 @@ function App() {
 
   const latestData = bitcoinDetails[bitcoinDetails.length - 1];
 
-  const renderHome = () => (
+  const renderHome = (): JSX.Element => (
     <>
       <StyledTitle>Project: Bitcoin Explorer</StyledTitle>
       <Subtitle>Team: Akshatha Patil, Sumanayana Konda, Ruthwik BG</Subtitle>
-      <Subtitle>Tools Used: React, NodeJs, PostgreSQL and Rust</Subtitle>
+      <Subtitle>Tools Used: Typescript, PostgreSQL and Rust</Subtitle>
       
       <Section>
         <h2>Project Details</h2>

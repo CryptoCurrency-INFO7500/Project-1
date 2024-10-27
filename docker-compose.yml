@@ -1,15 +1,14 @@
 services:
   frontend:
-    build:
-      context: ./frontend
+    image: kondasumanayana/project-1-frontend:latest
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
       - backend
 
+
   backend:
-    build:
-      context: ./backend
+    image: kondasumanayana/project-1-backend:latest
     ports:
       - "3002:3002"
     environment:
@@ -20,8 +19,7 @@ services:
         condition: service_healthy
 
   extractor:
-    build:
-      context: ./rust_extractor
+    image: kondasumanayana/project-1-extractor:latest
     depends_on:
       - db
     environment:
@@ -29,7 +27,7 @@ services:
     command: ["rust_extractor"]
 
   db:
-    image: postgres:13
+    image: kondasumanayana/postgres:13-bullseye
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

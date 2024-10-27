@@ -1,27 +1,21 @@
-# FROM rust:latest as builder
-# WORKDIR /usr/src/app
-# COPY . .
-# RUN cargo build --release
-
-# FROM debian:bullseye-slim
-# RUN apt-get update && \
-#     apt-get update && apt-get install -y libssl3 \
-#     apt-get install -y ca-certificates && \
-#     rm -rf /var/lib/apt/lists/*
-# COPY --from=builder /usr/src/app/target/release/rust_extractor /usr/local/bin/
-# CMD ["rust_extractor"]
-
+# Build stage
 FROM rust:latest as builder
-
 WORKDIR /usr/src/myapp
 COPY . .
-
 RUN cargo build --release
 
+# # Runtime stage
 FROM ubuntu:22.04
 
-RUN apt-get update && apt-get install -y libssl3 ca-certificates && rm -rf /var/lib/apt/lists/*
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    ca-certificates \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
+# Copy the built executable from the builder stage
 COPY --from=builder /usr/src/myapp/target/release/rust_extractor /usr/local/bin/rust_extractor
 
+# Set the entrypoint
 CMD ["rust_extractor"]
