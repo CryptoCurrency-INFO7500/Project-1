@@ -3,3 +3,6 @@ backend/node_modules/
 frontend/node_modules/
 backend/package-lock.json
 frontend/package-lock.json
+.DS_Store
+backend/.DS_Store
+rust_extractor/.DS_Store

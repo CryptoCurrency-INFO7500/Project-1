@@ -1,60 +1,154 @@
-name: CI/CD Pipeline
+name: Deploy to GCP
 
 on:
   push:
     branches:
       - main
 
+env:
+  GCP_PROJECT_ID: majestic-energy-439917-j6
+  GCP_REGION: us-central1-c
+
 jobs:
-  build:
+  connect-to-gcp:
+    name: Connect to GCP
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v4
     
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v2'
       with:
-        node-version: '16'
-    
-    - name: Install dependencies and build frontend
-      working-directory: ./frontend
-      run: |
-        npm install
-        npm run build
-    
-    - name: Build Docker image for frontend
-      working-directory: ./frontend
-      run: docker build -t react-frontend .
-    
-    - name: Install dependencies and build backend
-      working-directory: ./backend
-      run: |
-        npm install
-    
-    - name: Build Docker image for backend
-      working-directory: ./backend
-      run: docker build -t ts-backend .
-    
-    - name: Build Docker image for Rust extractor
-      working-directory: ./rust_extractor
-      run: docker build -t rust_extractor .
-    
-    - name: Start Docker containers
-      run: |
-        docker-compose up -d
-        sleep 30  # Wait for containers to start
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-    - name: Check if application is running
+    - name: Set up gcloud Cloud SDK environment
+      uses: google-github-actions/setup-gcloud@v2.1.1
+    
+    - name: 'Use gcloud CLI'
+      run: 'gcloud info'
+  
+  build-and-push-images:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Pull and Push PostgreSQL Image
       run: |
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
-        if [ $response = "200" ]; then
-          echo "Application is running successfully!"
-        else
-          echo "Application failed to start. HTTP response code: $response"
-          exit 1
-        fi
+        docker pull postgres:13-bullseye
+        docker tag postgres:13-bullseye kondasumanayana/postgres:13-bullseye
+        docker push kondasumanayana/postgres:13-bullseye
 
+    - name: Build and Push Backend Image
+      run: |
+        docker build -t kondasumanayana/project-1-backend:latest ./backend
+        docker push kondasumanayana/project-1-backend:latest
 
-    - name: Stop Docker containers
-      run: docker-compose down
+    - name: Build and Push Frontend Image
+      run: |
+        docker build -t kondasumanayana/project-1-frontend:latest ./frontend
+        docker push kondasumanayana/project-1-frontend:latest
+
+    - name: Build and Push Extractor Image
+      run: |
+        docker build -t kondasumanayana/project-1-extractor:latest ./rust_extractor
+        docker push kondasumanayana/project-1-extractor:latest
+
+  deploy:
+    name: Deploy to GCP VM
+    runs-on: ubuntu-latest
+    needs: build-and-push-images
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Create VM instance if it doesn't exist
+        id: create_vm
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          INSTANCE_NAME="bitcoin-explorer-20241028051029"
+          ZONE="us-central1-c"
+          MACHINE_TYPE="n1-standard-1"
+          IMAGE_FAMILY="debian-11"
+          IMAGE_PROJECT="debian-cloud"
+
+          if ! gcloud compute instances describe "$INSTANCE_NAME" --zone "$ZONE" &>/dev/null; then
+            echo "Creating VM instance $INSTANCE_NAME..."
+            gcloud compute instances create "$INSTANCE_NAME" --zone "$ZONE" --machine-type "$MACHINE_TYPE" --image-family "$IMAGE_FAMILY" --image-project "$IMAGE_PROJECT"
+          else
+            echo "VM instance $INSTANCE_NAME already exists."
+          fi
+
+          VM_IP=$(gcloud compute instances describe "$INSTANCE_NAME" --zone "$ZONE" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+          echo "VM_IP=$VM_IP" >> $GITHUB_ENV
+          echo "VM_IP=$VM_IP"
+          echo "GCP_INSTANCE_NAME=$INSTANCE_NAME" >> $GITHUB_ENV
+
+          gcloud compute ssh "$INSTANCE_NAME" --zone "$ZONE" --command "
+            if ! command -v docker &> /dev/null; then
+              echo 'Docker not found. Installing...'
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh ./get-docker.sh
+              echo 'Docker installed successfully.'
+            else
+              echo 'Docker is already installed.'
+            fi
+
+            if ! command -v docker-compose &> /dev/null; then
+              echo 'Docker Compose not found. Installing...'
+              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              echo 'Docker Compose installed successfully.'
+            else
+              echo 'Docker Compose is already installed.'
+            fi
+
+            sudo usermod -aG docker $USER
+            newgrp docker
+          "
+
+      - name: Login to Docker Hub on VM
+        run: |
+          gcloud compute ssh "bitcoin-explorer-20241028051029" --zone "us-central1-c" --command "
+            echo '${{ secrets.DOCKERHUB_TOKEN }}' | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          "
+
+      - name: Copy docker-compose.yml to VM
+        run: |
+          gcloud compute ssh "bitcoin-explorer-20241028051029" --zone "us-central1-c" --command "
+            if [ -f ~/docker-compose.yml ]; then
+              rm ~/docker-compose.yml
+              echo 'Removed existing docker-compose.yml'
+            fi
+          "
+          gcloud compute scp docker-compose.yml "bitcoin-explorer-20241028051029":~/docker-compose.yml --zone "us-central1-c"
+          echo 'Copied new docker-compose.yml to VM'
+
+      - name: Deploy with Docker Compose
+        run: |
+          gcloud compute ssh "bitcoin-explorer-20241028051029" --zone "us-central1-c" --command "
+            sudo usermod -aG docker $USER
+            newgrp docker
+            cd /home/runner
+            sudo docker-compose down
+            sudo docker-compose pull
+            sudo docker-compose up -d
+          "
+
+      - name: Print VM IP
+        run: echo "Application deployed to ${{ env.VM_IP }}"
