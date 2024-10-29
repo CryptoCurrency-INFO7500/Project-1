@@ -15,7 +15,6 @@ The project is composed of four main components:
 
 - Docker
 - Docker Compose
-- Node.js (for local development)
 - Rust (for local development of the extractor)
 
 ## Architecture
