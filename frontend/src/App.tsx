@@ -178,7 +178,7 @@ function App(): JSX.Element {
   const [activeView, setActiveView] = useState<'home' | 'database' | 'visualizations'>('home');
 
   useEffect(() => {
-    fetch(`http://34.55.192.137:3002/api/historical`)
+    fetch(`http://34.66.157.31:3002/api/historical`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
